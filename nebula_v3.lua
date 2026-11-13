@@ -98,3 +98,103 @@ local function stepParticles(dt)
     local d=math.sqrt(dx*dx+dy*dy)
     local f=l[3]
     if d<125 then
+      f.Visible=true f.BackgroundTransparency=.5+.5*(d/125)
+      f.Size=UDim2.fromOffset(d,1) f.Position=UDim2.fromOffset((a.x+b.x)/2+ox,(a.y+b.y)/2+oy) f.Rotation=math.deg(math.atan2(dy,dx))
+    else f.Visible=false end
+  end
+end
+
+-- ===================================================================
+--  SIDEBAR (3D logo + tabs + user card)
+-- ===================================================================
+local side=N("Frame",{Size=UDim2.new(0,150,1,0),BackgroundColor3=BG1,BackgroundTransparency=.35,BorderSizePixel=0,ZIndex=2},win)
+N("Frame",{Size=UDim2.new(0,1,1,0),Position=UDim2.new(1,-1,0,0),BackgroundColor3=Color3.new(1,1,1),BackgroundTransparency=.93,BorderSizePixel=0},side)
+
+local vfl=N("ViewportFrame",{Position=UDim2.fromOffset(10,8),Size=UDim2.fromOffset(46,46),BackgroundTransparency=1,Ambient=Color3.fromRGB(200,200,230),LightColor=Color3.new(1,1,1),LightDirection=Vector3.new(-1,-1,-1)},side)
+local vcl=N("Camera",{FieldOfView=55},vfl) vfl.CurrentCamera=vcl
+vcl.CFrame=CFrame.lookAt(Vector3.new(0,.2,5.2),Vector3.new(0,0,0))
+local function gpart(sz,mat) return N("Part",{Size=sz,Material=mat or Enum.Material.Neon,Anchored=true,CanCollide=false,CastShadow=false},vfl) end
+local gem,gem2=gpart(Vector3.new(1.7,1.7,1.7)),gpart(Vector3.new(.85,.85,.85))
+local gorb={}
+for i=1,8 do gorb[i]=gpart(Vector3.new(.2,.2,.2)) gorb[i].Shape=Enum.PartType.Ball end
+onTheme(function() gem.Color=A1 gem2.Color=Color3.new(1,1,1) for i,o in ipairs(gorb) do o.Color=(i%2==0) and A1 or A2 end end)
+local function logoStep(t)
+  gem.CFrame=CFrame.Angles(t*.9,t*1.2,math.rad(20))
+  gem2.CFrame=CFrame.Angles(-t*1.3,t*.7,0)
+  for i,o in ipairs(gorb) do
+    local a=t*1.7+i*math.pi/4
+    o.CFrame=CFrame.new(math.cos(a)*1.5,math.sin(a*2)*.4,math.sin(a)*1.5)
+  end
+end
+
+local ttl=T({Text="N E B U L A",Font=Enum.Font.GothamBlack,TextSize=16,Position=UDim2.fromOffset(62,12),Size=UDim2.new(1,-66,0,20),TextXAlignment=Enum.TextXAlignment.Left,TextColor3=Color3.new(1,1,1)},side)
+local ttlG=N("UIGradient",{},ttl)
+onTheme(function() ttlG.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,A1),ColorSequenceKeypoint.new(.5,Color3.new(1,1,1)),ColorSequenceKeypoint.new(1,A2)}) end)
+T({Text="visuals  |  v3",TextSize=10,TextColor3=DIM,Position=UDim2.fromOffset(62,32),Size=UDim2.new(1,-66,0,12),TextXAlignment=Enum.TextXAlignment.Left},side)
+
+local tabList=N("Frame",{Position=UDim2.fromOffset(8,64),Size=UDim2.new(1,-16,1,-134),BackgroundTransparency=1},side)
+N("UIListLayout",{Padding=UDim.new(0,4)},tabList)
+
+local ucard=N("Frame",{AnchorPoint=Vector2.new(0,1),Position=UDim2.new(0,8,1,-8),Size=UDim2.new(1,-16,0,46),BackgroundColor3=BG2,BackgroundTransparency=.3},side) corner(ucard,10) stroke(ucard)
+local av=N("ImageLabel",{Position=UDim2.fromOffset(8,7),Size=UDim2.fromOffset(32,32),BackgroundColor3=BG1,BorderSizePixel=0},ucard) corner(av,16)
+task.spawn(function()
+  local ok,img=pcall(function() return P:GetUserThumbnailAsync(lp.UserId,Enum.ThumbnailType.HeadShot,Enum.ThumbnailSize.Size48x48) end)
+  if ok and av.Parent then av.Image=img end
+end)
+T({Text=lp.DisplayName,Font=Enum.Font.GothamBold,TextSize=12,Position=UDim2.fromOffset(46,7),Size=UDim2.new(1,-50,0,16),TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd},ucard)
+T({Text="visuals only",TextSize=10,TextColor3=DIM,Position=UDim2.fromOffset(46,23),Size=UDim2.new(1,-50,0,12),TextXAlignment=Enum.TextXAlignment.Left},ucard)
+
+-- ===================================================================
+--  MAIN AREA / TABS
+-- ===================================================================
+local main=N("Frame",{Position=UDim2.fromOffset(150,0),Size=UDim2.new(1,-150,1,0),BackgroundTransparency=1,ZIndex=2},win)
+local head=N("Frame",{Size=UDim2.new(1,0,0,42),BackgroundTransparency=1},main)
+local title=T({Text="ESP",Font=Enum.Font.GothamBold,TextSize=16,Position=UDim2.fromOffset(16,0),Size=UDim2.new(0,150,1,0),TextXAlignment=Enum.TextXAlignment.Left},head)
+local sb=N("TextBox",{AnchorPoint=Vector2.new(1,.5),Position=UDim2.new(1,-46,.5,0),Size=UDim2.fromOffset(140,24),BackgroundColor3=BG2,BackgroundTransparency=.2,Text="",PlaceholderText="Search...",PlaceholderColor3=DIM,TextColor3=TXT,Font=Enum.Font.Gotham,TextSize=12,ClearTextOnFocus=false},head) corner(sb,7) stroke(sb)
+local xb=N("TextButton",{AnchorPoint=Vector2.new(1,.5),Position=UDim2.new(1,-12,.5,0),Size=UDim2.fromOffset(26,24),BackgroundColor3=BG2,BackgroundTransparency=.2,Text="x",TextColor3=DIM,Font=Enum.Font.GothamBold,TextSize=13,AutoButtonColor=false},head) corner(xb,7) stroke(xb)
+local content=N("Frame",{Position=UDim2.fromOffset(12,46),Size=UDim2.new(1,-24,1,-56),BackgroundTransparency=1,ClipsDescendants=true},main)
+
+local pages,tabs={}, {}
+local curPage
+local function filter()
+  local q=sb.Text:lower()
+  if not curPage then return end
+  for _,cd in ipairs(curPage.cards) do
+    local any=false
+    for _,rw in ipairs(cd.rows) do
+      local m=(q=="" or rw.name:lower():find(q,1,true)~=nil)
+      rw.f.Visible=m if m then any=true end
+    end
+    cd.f.Visible=(q=="") or any
+  end
+end
+sb:GetPropertyChangedSignal("Text"):Connect(filter)
+local PV={on=false}
+local function selectTab(i)
+  for k,pg in ipairs(pages) do
+    local on=(k==i)
+    if on and not pg.sf.Visible then pg.sf.Position=UDim2.fromOffset(0,12) tw(pg.sf,.3,{Position=UDim2.fromOffset(0,0)}) end
+    pg.sf.Visible=on
+    tw(tabs[k].bar,.2,{Size=UDim2.fromOffset(3,on and 16 or 0)})
+    tw(tabs[k].btn,.2,{BackgroundTransparency=on and .84 or 1,TextColor3=on and TXT or DIM})
+  end
+  curPage=pages[i] title.Text=curPage.name sb.Text="" filter()
+  PV.on=(curPage.name=="ESP")
+end
+local function page(name)
+  local idx=#pages+1
+  local sf=N("ScrollingFrame",{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=2,CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,Visible=false,ScrollingDirection=Enum.ScrollingDirection.Y},content)
+  onTheme(function() sf.ScrollBarImageColor3=A1 end)
+  N("UIPadding",{PaddingBottom=UDim.new(0,12),PaddingRight=UDim.new(0,5)},sf)
+  local function col(sx,ox2)
+    local c=N("Frame",{Size=UDim2.new(.5,-4,0,0),Position=UDim2.new(sx,ox2,0,0),AutomaticSize=Enum.AutomaticSize.Y,BackgroundTransparency=1},sf)
+    N("UIListLayout",{Padding=UDim.new(0,8),SortOrder=Enum.SortOrder.LayoutOrder},c)
+    return c
+  end
+  local pg={sf=sf,name=name,cards={},L=col(0,0),R=col(.5,4)}
+  local btn=N("TextButton",{Size=UDim2.new(1,0,0,30),BackgroundColor3=A1,BackgroundTransparency=1,Text=name,TextColor3=DIM,Font=Enum.Font.GothamMedium,TextSize=13,TextXAlignment=Enum.TextXAlignment.Left,AutoButtonColor=false},tabList) corner(btn,8)
+  N("UIPadding",{PaddingLeft=UDim.new(0,16)},btn)
+  local bar=N("Frame",{AnchorPoint=Vector2.new(0,.5),Position=UDim2.new(0,-12,.5,0),Size=UDim2.fromOffset(3,0),BackgroundColor3=A1,BorderSizePixel=0},btn) corner(bar,2)
+  onTheme(function() btn.BackgroundColor3=A1 bar.BackgroundColor3=A1 end)
+  pages[idx]=pg tabs[idx]={btn=btn,bar=bar}
+  btn.MouseButton1Click:Connect(function() selectTab(idx) end)
